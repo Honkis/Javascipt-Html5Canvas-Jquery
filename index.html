@@ -1,0 +1,881 @@
+<!DOCTYPE HTML>
+
+<script src="jquery-2.1.1.js"></script>
+
+<html lang="sv">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<link href="css.css" rel="stylesheet" type="text/css">
+<head>
+	<script type="text/javascript" src="canvas.js"></script>
+	<script type="text/javascript" src="jqbas.js"></script>
+	<title>Drone Attack</title>
+</head>
+
+<script type="text/javascript">
+	var startDate;
+	var endDate;
+	var whoDrone;
+	var clickMode=1;
+	var WhoLoggedIn;
+	var app="DroneAttack";
+	var moarDate=[]; // array for dates that are missing booking when moar then 2 days.
+	 
+	
+	// calendar arrays and new date
+	cal_days_labels = ['s','m','t','o','t','f','l'];
+	
+	cal_months_labels = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+	
+	cal_days_in_month = ['31','28','31','30','31','30','31','31','30','31','30','31'];
+	
+	cal_current_date = new Date();
+	
+	// can generate anyday off year or month
+	function Calendar(month,year){
+		this.month = (isNaN(month) || month == null) ? cal_current_date.getMonth() : month;
+		this.year = (isNaN(year) || year == null) ? cal_current_date.getFullYear() : year;
+		
+		this.html = '';
+	}
+	// the calendar
+	Calendar.prototype.generateHTML = function(){
+		
+		var firstDay = new Date(this.year, this.month, 1);
+		var startingDay = firstDay.getDay()
+		var monthLenght = cal_days_in_month[this.month];
+		
+		// This is for fucking feburary 4th year has 1 day more fuck you
+		if (this.month == 1) {
+			if((this.year % 4 == 0 && this.year % 100 != 0) || this.year % 400 == 0){
+				monthLenght = 29;
+			}
+		}
+		
+		// table header
+		var que = cal_current_date.getMonth()+1; // +1 makes it the right month. getMonth() is retarded....
+		var firstCal = cal_current_date.getFullYear() + '-' +que; // this is for the first calendar
+		var monthName = cal_months_labels[this.month];
+		var tableidm= this.month+1;		// this month or the month added when making the calendar
+		var tableidy =this.year;	// this dates year or the year you added to make the clenad
+		var tableid = tableidy + '-'+tableidm;	// gives excellent id to table id
+		var html = '';
+		var prevmonth = this.month; // gives the prev month to the prev month button
+		var nextmonth = this.month + 2;
+		var nextY = this.year+1; // keep track of the next year.
+		
+		
+		if(tableid==firstCal){
+			html += '<table class="calendar-table" id="'+tableid+'" style="display:block;" >';
+		}else{
+			html += '<table class="calendar-table" id="'+tableid+'" style="display:none;">';
+		}
+		
+
+		html += '<tr><th id="'+ prevmonth +'" class="prev-'+tableid+'" colspan="2">prevmonth</th>';
+		html += '<th colspan="3" class="monthyear">';
+		html += monthName + "&nbsp;" + this.year;
+		html += '</th><th id="'+ nextmonth +'" class="next-'+tableid+'-'+nextY+'" colspan="2">nextmonth';
+		
+		html += '</th></tr>';
+		html += '<tr class="calendar-header">';
+		
+		for(var i = 0;i <=6; i++){
+			html += '<td class ="calendar-header-day">';
+			html += cal_days_labels[i];
+			html += '</td>';
+			
+		}
+		html += '</tr><tr>';
+		this.month += 1;
+		var month2="";
+		var day = 1;
+		var day2 = "";
+		// waeks
+		
+		for(var i = 0; i < 9;i++){
+				// weakdays
+				for (var j = 0; j <= 6; j++){
+					
+					if(this.month <=9){
+						month2 +="0";
+						month2 += this.month;
+					}else {
+						month2=this.month;
+					}
+					
+					if(day <= 9){
+						day2 +="0";
+						day2 += day;
+					}else {
+						day2= day;
+						
+					}
+					
+					var id = this.year +'-' + month2 + '-' + day2;
+					
+					
+					if(day <= monthLenght && (i > 0 || j >= startingDay)){
+						html += '<td class="calendar-day" id="'+ id +'">';
+						html += day;
+						day ++;
+						
+					}else{
+						html += '<td class="calendar-day" id="">';
+						
+					}
+					
+					month2="";
+					day2="";
+				}	
+				html += '</td>';
+				
+				if(day > monthLenght){
+					break;
+				}else{
+					html+= '</tr></tr>'
+				}
+		}
+		html += '</tr></table>'
+		
+		this.html= html;
+		
+	}
+	
+	Calendar.prototype.getHTML = function(){
+		return this.html;
+	}
+	
+	
+
+</script>
+
+<body onload="main(); checkCokkieUser();window.onhashchange = function(){historyChange();};">
+	
+	
+<div id="topmeny">
+	<!-- <button id="buttonBooking" onClick="expandHide('booking');">Book</button> -->
+	<div id="meny">	
+		<div id="buttonSearch" onClick="expandHide('search');uppHistory('search');searchResources('Little Boy');searchResources('Medium brother');searchResources('BIG mama');">Booking Page</div>
+		<div id="buttonmCustBookings" onClick="expandHide('custBookings');loggedInBookings();uppHistory('custBookings');">Users page</div>
+		<!--<div id="buttonmbooking" onClick="expandHide('booking');">Calender</div>-->
+	</div>
+	<div id="buttonLogin" style="display:none;">Login</div>
+	
+	<div id="loggout" onclick="loggout();" style="display:none;">Logg out</div>
+
+	<div id="ddlogin" class="targetlogin">
+		
+		<!-- login fields -->
+		
+		<div id="login" >
+			<div id="user">
+			<label>                                                                                               
+		      	Username:<br><input type="text" id="loginusername" onkeyup="UserCheck('loginusername');GetValidated('Loginbutton')"><br>
+		    </label>
+		                                                                                                   
+		    <input type="button" id="Loginbutton" value="Log in"  onclick="showCustomer('1');" disabled> 
+		      	
+		   	<br>
+			
+			
+			<button id="buttonnewCust" onClick="expandHide('newCust');">Ny Kund</button>
+			
+			</div>
+		
+		<!-- creation of new customer -->
+		<div id="newCust" style="display:none;">
+			
+			    <label>                                                                                 
+		      	ID: (is used to identify the user)<br><input type="text" id="customerID" onkeyup="GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	<label>                                                                   
+		      	firstname:<br><input type="text" id="firstname2" onkeyup="nameCheck('firstname2');GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	<label>                                                                                             
+		      	lastname:<br><input type="text" id="lastname2" onkeyup="nameCheck('lastname2');GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	<label>                                                                                               
+		      	address:<br><input type="text" id="address" onkeyup="GetValidetedx2('newCustButton');"><br>
+		      	</label>
+		      	<label>                                                                                                 
+		      	email:<br><input type="text" id="email" onkeyup="emailCheck();GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	                                                                                                     
+		      	<input type="button" id="newCustButton" value="Store Customer" disabled onclick="storeCustomer();">    
+			
+			
+		</div>
+		</div>
+
+	</div>
+
+</div>
+
+<!-- the canvas "game" look in canvas.js for code -->
+<div id="start" style="display:block;">
+	
+	<canvas id="text1" width="650" height="450">
+	
+		
+		
+	</canvas>
+
+</div>
+
+<!-- testing calendar crap. Doesent show on page IGNORE THIS DIV!!!!! -->
+<div id="booking" style="display:none;">
+
+	<div id="calendar" style="margin: 15px 0px 0px 25px;">
+	
+		
+		<script type="text/javascript" id="calendartest">
+			var test=6;
+			var cal = new Calendar(test,2016);
+			cal.generateHTML();
+			document.write(cal.getHTML());
+		</script>
+	</div>
+	
+</div>
+
+<!-- This is the booking page with the calendar -->
+<div id="search" style="display:none;">
+		
+		<div id="buttonbook" onclick="makeBooking();missingDayBooking();">
+			<h1 id="acceptBooking">ACCEPT BOOKING </h1>
+			<p id="startDateText">StartDate: </p>
+			<p id="enDateText">EndDate: </p>
+			<p id="endCost">Cost: </p>
+			
+		</div>
+				
+		<div id="resc1" class="menuitem" onclick="getResToCal('Drone1');" style="background-color:lightgreen; border:solid 1px yellow; "> 
+		</div>
+		<div id="resc2" class="menuitem" onclick="getResToCal('Drone2');" style="background-color:lightgreen; border:solid 1px yellow; "> 
+		</div>
+		<div id="resc3" class="menuitem" onclick="getResToCal('Drone3');" style="background-color:lightgreen; border:solid 1px yellow; "> 
+		</div>
+
+			<div id="calendar2">
+				
+				<script type="text/javascript">
+					var d = new Date();
+					var m = d.getMonth();
+					var y = d.getFullYear();
+					
+					for(var i = 0; i < 16; i++){
+						
+						if(m==12){
+							m = 0;
+							y++;
+						}
+						
+						var cal = new Calendar(m,y);
+						cal.generateHTML();
+						document.write(cal.getHTML());
+						m++;
+						
+					}
+					
+				</script>
+				<p> click a startdate and an enddate of wich you want to rent the drone </p>
+			</div>
+
+</div>
+
+<!-- This is the user page with the info for the user -->
+<div id="custBookings" style="display:none;">
+	<div id="custInfo"> </div>
+	<div id="bookingsMade"> </div>
+</div>
+
+</body>
+
+<!-- Javascript for the things that arent calendar. See jqbas.js for all the Jquery on this page -->
+<script>
+		var id1;
+		var id2;
+		var id3;
+		
+		// searching info for the drone info buttons
+		function searchResources(wichDrone)
+		{
+			
+
+				$.ajax({
+					type: 'POST',
+					url: 'booking/getresources_XML.php',
+					data: { name: escape(wichDrone),
+						type: app 	  // Filter out bookings made from other applications application.
+			                            // Most commonly user name of student					
+						},
+					success:  showResources,
+    	    		error: errormsg		
+				});
+		}
+		
+		function showResources(returnedData)
+		{
+				// An XML DOM document is returned from AJAX
+				var resultset=returnedData.childNodes[0];
+				var output="<table>";
+				var whereTo="";
+				
+				
+				
+				// Iterate over all nodes in root node (i.e. resources)
+				for (i = 0; i < resultset.childNodes.length; i++) {
+						// Iterate over all child nodes of that node that are resource nodes
+						if(resultset.childNodes.item(i).nodeName=="resource"){
+								// Retrieve data from resource nodes
+								var resource=resultset.childNodes.item(i);
+								
+								output+="<tr><th class='clickAble'>Name: </th><td class='clickAble'>"+resource.attributes['name'].nodeValue+"</td></tr>";
+								output+="<tr><th class='clickAble'>Location: </th><td class='clickAble'>"+resource.attributes['location'].nodeValue+"</td></tr>";
+								output+="<tr><th class='clickAble'>Cost $/day: </th><td class='clickAble' id='"+resource.attributes['id'].nodeValue+"'>"+resource.attributes['cost'].nodeValue+"</td></tr>";
+								
+								if(resource.attributes['id'].nodeValue=="Drone1"){
+									whereTo="resc1";
+									
+								}else if(resource.attributes['id'].nodeValue=="Drone2"){
+									whereTo="resc2";
+								}else{
+									whereTo="resc3";
+									
+								}
+								
+										
+						}
+				}
+				
+
+				output+="</table>"
+				var div=document.getElementById(whereTo);
+				div.innerHTML=output;
+		}
+		
+		
+		// gets info on wich bookings are made for a a specific rescoures
+		function getResToCal(res){
+			  $.ajax({
+			      type: 'POST',
+			      url: 'booking/getbookings_XML.php',
+			      data: {
+			      	 resourceID: res,
+							 type: app 	  // Filter out bookings made from other applications application.
+		                                  // Most commonly user name of student														         
+			         },
+			         success:  ArrayBookings,
+		    			 error: errormsg		
+			})
+			
+		}
+		
+		// gets an array of booked dates and turns that dates background into red if their not avilible
+		function ArrayBookings(returnedData)
+		{
+				// An XML DOM document is returned from AJAX
+				var resultset=returnedData.childNodes[0];
+				var TheArray = [];
+				var output="";
+				var output2="";
+				var output3=""; // innerhtml h1 to the booking button
+				var p=0;
+
+				// Iterate over all nodes in root node (i.e. customers)
+				for (i = 0; i < resultset.childNodes.length; i++) {
+						if(resultset.childNodes.item(i).nodeName=="booking"){
+								// Retrieve position from the returned booking
+								var booking=resultset.childNodes.item(i);
+								
+							output3 = "Accept booking on: "+booking.attributes['name'].nodeValue;
+							
+							output = booking.attributes['date'].nodeValue;
+							output2 = booking.attributes['dateto'].nodeValue;
+							TheArray[p] = output;
+							p++;
+							TheArray[p] = output2;
+							p++;
+							output= "";
+							output2= "";
+						}
+				}
+				
+				// set innerhtml with the name of wich drone the user wants to book. onclik on the drone info div.
+				var div=document.getElementById("acceptBooking");
+				div.innerHTML=output3;
+				
+				
+				// resets all the color background off the calender if the user wants to make another booking. No leftbehinds from other shit
+				var calendar = document.getElementById("calendar2");
+				var tdToYellow = calendar.getElementsByTagName('td');
+				
+				for(var i = 0;i < tdToYellow.length;i++){
+					if(tdToYellow[i].style.backgroundColor=="red"){
+						tdToYellow[i].style.backgroundColor="yellow";
+						tdToYellow[i].className="calendar-day";
+					}
+					
+				}
+				
+				// sets all td in the calender that is in TheArray to red background. and the class of the TD so you cant click it
+				for(i=0; i < TheArray.length;i++){
+					var trying= TheArray[i];
+					
+					var trySplit = trying.split(" ");
+					
+					var changeColorTd = document.getElementById(trySplit[0]);
+					if(changeColorTd){
+						
+						changeColorTd.className=("booked");
+						changeColorTd.style.backgroundColor="red";
+					}
+				}
+				
+				
+		}
+		// navigates when the url changes
+		function historyChange(){
+			
+			if(value=window.location.hash.substring(1)==""){
+				expandHide('start');
+			}else{
+				expandHide(value=window.location.hash.substring(1));
+			}
+		}
+		// uppdates url on some buttons
+		function uppHistory(where){
+			window.location.hash=where;
+		}
+		
+		// what happens when the user loggsout
+		function loggout(){
+			localStorage.setItem('username','');
+			
+			document.getElementById("buttonLogin").style.display="block";
+			document.getElementById("loggout").style.display="none";
+			document.getElementById("buttonmCustBookings").style.display="none";
+			window.location=""; //forces the user to the "startpage"
+			
+		}
+		// checks if the user has anything in the local storages
+		function checkCokkieUser(){
+			var test = localStorage.getItem("username");
+			
+			
+			if(test!=null && test!=""){
+				
+				WhoLoggedIn = localStorage.getItem("username");
+				showCustomer();
+				document.getElementById("loggout").style.display="block";
+				document.getElementById("buttonmCustBookings").style.display="block";
+			}else{
+				document.getElementById("buttonLogin").style.display="block";
+			}
+		}
+		
+		// shows the user all thair bookings with a delete button
+		function loggedInBookings()
+		{
+			var Who=localStorage.getItem("username");
+			
+		  	$.ajax({
+					type: 'POST',
+					url: 'booking/getcustomerbookings_XML.php',
+					data: {
+						customerID: Who,
+						type: app 	  // Filter out bookings made from other applications application.
+						                      // Most commonly user name of student
+					},
+					success:  ResultBookingCustomer,
+				  error: errormsg		
+				});
+		}
+
+		function ResultBookingCustomer(returnedData)
+		{
+			// An XML DOM document is returned from AJAX
+			var resultset=returnedData.childNodes[0];
+
+			var output="<table id='myBookingsTable' style='border:1px solid;'>";
+			output+="<tr><th>Company</th><th>Name</th><th>Location</th><th>Date</th></tr>"
+			// Iterate over all nodes in root node (i.e. bookings)
+			for (i = 0; i < resultset.childNodes.length; i++) {
+				// Iterate over all child nodes of that node that are booking nodes
+				if(resultset.childNodes.item(i).nodeName=="booking"){
+					// Retrieve first name and last name for node
+					var booking=resultset.childNodes.item(i);
+					
+					
+					id1= booking.attributes['date'].nodeValue;
+					id2= booking.attributes['resourceID'].nodeValue;
+					
+					
+					// doesent show dates inbetween that the app is booking auto
+					var durpDates = booking.attributes['dateto'].nodeValue;
+					var durpDateIf = durpDates.split(" ");
+					durpDates=booking.attributes['date'].nodeValue;
+					var durpDateIf2 = durpDates.split(" ");
+					id3= durpDateIf2[0]+"-"+durpDateIf[0]+"-"+booking.attributes['resourceID'].nodeValue;
+					
+					// only shows relevent dates for the user
+					if(durpDateIf[1] == "00:00"){
+					
+						output+="<tr>";
+						output+="<td>"+booking.attributes['company'].nodeValue+"</td>";
+						output+="<td>"+booking.attributes['name'].nodeValue+"</td>";
+						output+="<td>"+booking.attributes['location'].nodeValue+"</td>";
+						output+="<td>"+booking.attributes['date'].nodeValue+"";
+						output+="  -  "+booking.attributes['dateto'].nodeValue+"</td>";
+						
+						output+="<td><button onclick=deleteCrapDates('"+id3+"');";
+						output+=" '>";
+						//class='deleteBut' id='"+durpDateIf2[0]+";"+durpDateIf[0]+"
+						output+="Delete</button></td>";
+						output+="</tr>";
+					}
+			
+				}
+			}
+
+			output+="</table>"
+			var div= document.getElementById('bookingsMade');
+			div.innerHTML=output;
+		}
+		
+		//deletefunction for all dates have some buggs ( not noticible for the user )
+		function deleteCrapDates(date){
+			var dateSplit= date.split("-");
+			var bug1=0;  // same bugs as in the qjuery for booking. work on some other time. if it works don change maybe?
+			var bug2=0;
+			var dateToDelete;
+			
+			dateToDelete = dateSplit[0]+"-"+dateSplit[1]+"-"+dateSplit[2]+" 00:00";
+			
+			deleteBok(dateToDelete,dateSplit[6]);
+			
+			for(dateSplit[2] ; dateSplit[2] < dateSplit[5];dateSplit[2]++){
+				
+				if(bug1==1){
+					
+					if(dateSplit[2]<10){
+					  	
+					  	dateToDelete = dateSplit[0]+"-"+dateSplit[1]+"-0"+dateSplit[2]+" 00:00";
+					  			
+		  				deleteBok(dateToDelete,dateSplit[6]);
+		 				
+					  			
+			  			}else {
+				 			dateToDelete = dateSplit[0]+"-"+dateSplit[1]+"-"+dateSplit[2]+" 00:00";
+					  			
+					 		deleteBok(dateToDelete,dateSplit[6]);
+					  		
+					  			
+					  }
+					  bug2++;
+					
+				}else{
+					bug1++;
+				}
+			}
+			
+		}
+		
+		function deleteBok(date,res){
+
+			
+
+			$.ajax({
+		    type: 'POST',
+		    url: 'booking/deletebooking_XML.php',
+		    data: {
+	      	resourceID: res,
+	      	date: date,
+	      	customerID: WhoLoggedIn
+				  	 
+		    },
+		    success:  deleteComplete,
+				error: errormsg
+	  	});
+	  	
+		}
+		
+		function deleteComplete(){
+			loggedInBookings();
+			
+		}
+		
+		// booked the missing date of a booking longer than 2 days  ( this might be bugged sometimes i dono why ) 
+		function missingDayBooking(){
+			console.log(moarDate.length+"    kan du funka snälla");
+			for(var i=0;i < moarDate.length ; i++){
+				startDate=moarDate[i]+" 00:00";
+				endDate=moarDate[i]+" 01:00";
+				makeBooking();
+			}
+			for(var i=0;i < moarDate.length ; i++){
+				delete moarDate[i];
+				console.log(moarDate);
+			}
+		}
+		// makes bookings see jquery ( jqbas.js ) for the full run of all the bookings
+		function makeBooking()
+		{
+			var rebate="NULL";
+			var statusb="2";
+			var position="Göteborg";
+			var auxdata="NULL";
+			var apptype="DroneAttack";
+			
+
+			$.ajax({
+		    type: 'POST',
+		    url: 'booking/makebooking_XML.php',
+		    data: {
+	      	resourceID: whoDrone,
+	      	date: startDate,
+	      	dateto: endDate,
+	      	customerID: WhoLoggedIn,
+	      	rebate: rebate,
+	      	status: statusb, 
+	      	position: position,
+				  type: apptype 	 
+		    },
+		    success:  bookingmade,
+				error: errormsg
+	  	});
+		}
+
+		function bookingmade(returnedData)
+		{
+				var bookingdone = document.getElementById("acceptBooking");
+				bookingdone.innerHTML="BOOKING IS DONE";
+		}
+		
+
+		//gets the info off the user on loggin or if there is a local storage.
+		function showCustomer(durp)
+		{
+			if(durp==1){
+				var customerID=document.getElementById("loginusername").value;	
+			}else{
+				var customerID=localStorage.getItem("username");
+			}
+			
+			
+			
+		  $.ajax({
+				type: 'POST',
+				url: 'booking/getcustomer_XML.php',
+				data: { customerID: escape(customerID)},
+				success:  ResultCustomerInlogg,
+				error: errormsg
+			});
+		}
+	
+		function ResultCustomerInlogg(returnedData)
+		{
+			// An XML DOM document is returned from AJAX
+			
+			var resultset=returnedData.childNodes[0];
+			
+			// Iterate over all nodes in root node (i.e. customers)
+			for (i = 0; i < resultset.childNodes.length; i++) {
+					// Iterate over all child nodes of that node that are customer nodes
+					if(resultset.childNodes.item(i).nodeName=="customer"){
+							// Retrieve first name and last name for node
+							var customer=resultset.childNodes.item(i);
+							var div=document.getElementById('custInfo');
+							output='<table style="border:1px solid;"><tr><th>ID:  </th><td>'+customer.attributes['id'].nodeValue+
+							
+							'</td></tr><tr><th>First Name: </th><td>'+customer.attributes['firstname'].nodeValue+
+							'</td></tr><tr><th>Last Name: </th><td>'+customer.attributes['lastname'].nodeValue+
+							'</td></tr><tr><th>Address: </th><td>'+customer.attributes['address'].nodeValue+
+							'</td></tr><tr><th>Mail: </th><td>'+customer.attributes['email'].nodeValue+
+							"</td></tr><tr><th>Last Visited: </th><td>"+customer.attributes['lastvisit'].nodeValue+'</td></tr></table>';
+							div.innerHTML=output;
+							localStorage.setItem('username',customer.attributes['id'].nodeValue);
+							WhoLoggedIn=localStorage.getItem('username');  
+							//customer.attributes['id'].nodeValue;
+							document.getElementById("buttonLogin").style.display="none";
+							document.getElementById("loggout").style.display="block";
+							document.getElementById("buttonmCustBookings").style.display="block";
+					}
+			}
+			
+		}		
+		
+		
+		
+	   function storeCustomer()                                                                                                                            
+	   {                                                                                                                                                   
+	    var customerID=document.getElementById("customerID").value;                                                                                        
+	    var firstname=document.getElementById("firstname2").value;                                                                                          
+	    var lastname=document.getElementById("lastname2").value;                                                                                            
+	    var email=document.getElementById("email").value;                                                                                                  
+	    var address=document.getElementById("address").value;                                                                                              
+	                                                                                                                                                       
+	    $.ajax({                                                                                                                                           
+	     type: 'POST',                                                                                                                                     
+	     url: 'booking/makecustomer_XML.php',                                                                                                           
+	     data: { ID: escape(customerID),                                                                                                                   
+	      firstname: escape(firstname),                                                                                                                    
+	      lastname: escape(lastname),                                                                                                                      
+	      email: escape(email),                                                                                                                            
+	      address: escape(address),                                                                                                                        
+	     },                                                                                                                                                
+	     success:  ResultCustomer,
+	     error:errormsg                                                                                                                          
+	    });                                                                                                                                                
+	   } 
+		// doesent do shit atm 
+	   function ResultCustomer(returnedData)                                                                                                               
+	   {                                                                                                                                                   
+	    // Iterate over all nodes in root node (i.e. the 'created' element in root which has an attribute called status)                                   
+	    for (i = 0; i < returnedData.childNodes.length; i++) {                                                                                             
+	      if(returnedData.childNodes.item(i).nodeName=="created"){                                                                                         
+	      // alert(returnedData.childNodes.item(i).attributes['status'].nodeValue);                                                                          
+	      }                                                                                                                                                
+	    }                                                                                                                                                  
+	   }
+
+		function errormsg(jqXHR,textStatus,errorThrown)
+			{
+				console.log(jqXHR);
+				console.log("AJAX Error:\n"+errorThrown);
+			}
+	
+	
+	// for le login
+	function dropdownreverse(divname){
+		ddr=document.getElementById(divname);
+		
+		if(ddr.style.display=="none"){
+			ddr.style.display="block";
+			newCust.style.display="none";
+		}else{
+			ddr.style.display="none";
+		}
+		
+	}
+	
+	// nr 1 navigation function of the page.
+	function expandHide(content){
+		
+		// alert(content);
+		
+		destinationelement=document.getElementById(content);
+		
+		destinationelement.style.display="block";
+		
+		if(destinationelement.id=="booking"){
+			start.style.display="none";
+			
+			search.style.display="none";
+			
+			custBookings.style.display="none";
+			
+		}else if(destinationelement.id=="start"){
+			booking.style.display="none";
+			
+			search.style.display="none";
+			
+			custBookings.style.display="none";
+			
+		}else if(destinationelement.id=="custBookings"){
+			booking.style.display="none";
+			
+			search.style.display="none";
+			
+			start.style.display="none";
+			
+		}else if(destinationelement.id=="search"){
+			booking.style.display="none";
+			start.style.display="none";
+			
+			custBookings.style.display="none";
+			resc1.style.display="block";
+			resc2.style.display="block";
+			resc3.style.display="block";
+			acceptBooking.innerHTML="Accept Booking";
+			calendar2.style.display="none";
+			
+		}else if(destinationelement.id=="newCust"){
+			user.style.display="none";
+		}
+		return false;
+	}
+	// validation of firstname lastname <input>
+	function nameCheck(inputname){
+		nc=document.getElementById(inputname);
+		var letter=/^[a-zA-Z- ]+$/;
+		
+		if(nc.value.match(letter)){
+			nc.style.background="green";
+			nc.className="isValid";
+		}else{
+			nc.style.background="red";
+			nc.className="noValid";
+		}
+	}
+	// chekcs login user
+	function UserCheck(inputname){
+		nc=document.getElementById(inputname);
+		var letter=/^[0-9a-zA-Z- ]+$/;
+		
+		if(nc.value.match(letter)){
+			nc.style.background="green";
+			nc.className="isValid";
+		}else{
+			nc.style.background="red";
+			nc.className="noValid";
+		}
+	}
+	// email validation
+	function emailCheck(){
+		ec=document.getElementById("email");
+		
+		var mail= /^[^@]+@[^@]+\.[^@]+$/;
+		
+		if(ec.value.match(mail)){
+			ec.style.background="lightgreen";
+			ec.className="isValid";
+		}else{
+			ec.style.background="red";
+			ec.className="noValid";
+		}
+	}
+	// disable /enable validation for loggin button
+	function GetValidated(inputButton){
+		var ln=document.getElementById("loginusername");
+
+		
+		if(ln.className=="isValid"){
+			document.getElementById(inputButton).disabled="";
+		}else{
+			document.getElementById(inputButton).disabled="disabled";
+		}
+		
+	}
+	// validation for storecustomer button
+	function GetValidetedx2(inputButton){
+			/*var id=document.getElementById("customerID");
+			var adress=document.getElementById("address");*/
+			var mail=document.getElementById("email");
+			
+			var ln=document.getElementById("lastname2");
+			var fn=document.getElementById("firstname2");
+			
+			
+		if(ln.className=="isValid" && fn.className=="isValid" && mail.className=="isValid"){
+			document.getElementById(inputButton).disabled="";
+		}else{
+			document.getElementById(inputButton).disabled="disabled";
+		}
+	}
+
+	
+
+</script>
+
+</html>

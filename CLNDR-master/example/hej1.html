@@ -1,0 +1,356 @@
+<!DOCTYPE HTML>
+
+<!-- <script src="jquery-2.1.1.js"></script> -->
+
+<html lang="sv">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<link href="css.css" rel="stylesheet" type="text/css">
+<head>
+	
+</head>
+
+<body>
+	
+	
+<div id="topmeny">
+	<!-- <button id="buttonBooking" onClick="expandHide('booking');">Book</button> -->
+	<div id="meny">	
+		<div id="buttonSearch" onClick="expandHide('search');">aSearch</div>
+		<div id="buttonmCustBookings" onClick="expandHide('custBookings');">Mypage</div>
+		<div id="buttonmbooking" onClick="expandHide('booking');">Calender</div>
+	</div>
+	<div id="buttonLogin"  >Login</div>
+		<!-- onClick="dropdownreverse('login');" -->
+
+	<div id="ddlogin" class="targetlogin">
+		
+		<div id="login" >
+			
+			<label>                                                                                               
+		      	Username:<br><input type="text" id="loginusername" onkeyup="UserCheck('loginusername');GetValidated('Loginbutton')"><br>
+		    </label>
+		                                                                                                   
+		    <input type="button" id="Loginbutton" value="Log in"  onclick="showCustomer();" disabled> 
+		      	
+		   	<br>
+			
+			
+			<button id="buttonnewCust" onClick="expandHide('newCust');">Ny Kund</button>
+		</div>
+		
+		<div id="newCust" style="display:none;">
+			
+			    <label>                                                                                 
+		      	ID: (is used to identify the user)<br><input type="text" id="customerID" onkeyup="GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	<label>                                                                   
+		      	firstname:<br><input type="text" id="firstname2" onkeyup="nameCheck('firstname2');GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	<label>                                                                                             
+		      	lastname:<br><input type="text" id="lastname2" onkeyup="nameCheck('lastname2');GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	<label>                                                                                               
+		      	address:<br><input type="text" id="address" onkeyup="GetValidetedx2('newCustButton');"><br>
+		      	</label>
+		      	<label>                                                                                                 
+		      	email:<br><input type="text" id="email" onkeyup="emailCheck();GetValidetedx2('newCustButton')"><br>
+		      	</label>
+		      	                                                                                                     
+		      	<input type="button" id="newCustButton" value="Store Customer" disabled onclick="storeCustomer();">    
+			
+			
+		</div>
+
+	</div>
+
+</div>
+
+<div id="start" style="display:none;">
+	start
+
+</div>
+
+
+<div id="booking" style="display:none;">
+	
+ <!--	<div class="container">
+    	<div class="cal1">
+    	</div>
+
+ 	</div> -->   
+
+
+  <script src="json2.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min.js"></script>
+  <script src= "moment-2.8.3.js"></script>
+
+  <script src="../src/clndr.js"></script>
+  <script src="site.js"></script>
+
+  <!-- Enable live-reloading in the browser without an extension -->
+  <script src="http://localhost:35729/livereload.js"></script>
+</div>
+
+
+<div id="search" style="display:none;">
+				
+		<div id="resc1" class="menuitem" style="background-color:lightgreen; border:solid 1px yellow; margin-top:20px;"> 
+			res 1
+		</div>
+		<div id="resc2" class="menuitem" style="background-color:lightgreen; border:solid 1px yellow; margin-top:20px;"> 
+			res 2
+		</div>
+		<div id="resc3" class="menuitem" style="background-color:lightgreen; border:solid 1px yellow; margin-top:20px;"> 
+			res 3
+		</div>
+		
+		
+
+
+
+	
+</div>
+
+<div id="custBookings" style="display:none;">
+	
+</div>
+
+</body>
+
+
+<script>
+
+
+		
+		function showCustomer()
+		{
+			
+			var customerID=document.getElementById("loginusername").value;
+		  $.ajax({
+				type: 'POST',
+				url: '../../booking/getcustomer_XML.php',
+				data: { customerID: escape(customerID)},
+				success:  ResultCustomerInlogg,
+				error: errormsg
+			});
+		}
+	
+		function ResultCustomerInlogg(returnedData)
+		{
+			// An XML DOM document is returned from AJAX
+			
+			var resultset=returnedData.childNodes[0];
+			
+			// Iterate over all nodes in root node (i.e. customers)
+			for (i = 0; i < resultset.childNodes.length; i++) {
+					// Iterate over all child nodes of that node that are customer nodes
+					if(resultset.childNodes.item(i).nodeName=="customer"){
+							// Retrieve first name and last name for node
+							var customer=resultset.childNodes.item(i);
+							var div=document.getElementById('custBookings');
+							output=customer.attributes['id'].nodeValue+' '+customer.attributes['firstname'].nodeValue+' '+customer.attributes['lastname'].nodeValue+' '+customer.attributes['address'].nodeValue+' '+customer.attributes['email'].nodeValue+" "+customer.attributes['lastvisit'].nodeValue;
+							div.innerHTML=output;
+							
+					}
+			}
+			
+		}		
+		
+		
+		
+	   function storeCustomer()                                                                                                                            
+	   {                                                                                                                                                   
+	    var customerID=document.getElementById("customerID").value;                                                                                        
+	    var firstname=document.getElementById("firstname2").value;                                                                                          
+	    var lastname=document.getElementById("lastname2").value;                                                                                            
+	    var email=document.getElementById("email").value;                                                                                                  
+	    var address=document.getElementById("address").value;                                                                                              
+	                                                                                                                                                       
+	    $.ajax({                                                                                                                                           
+	     type: 'POST',                                                                                                                                     
+	     url: '../../booking/makecustomer_XML.php',                                                                                                           
+	     data: { ID: escape(customerID),                                                                                                                   
+	      firstname: escape(firstname),                                                                                                                    
+	      lastname: escape(lastname),                                                                                                                      
+	      email: escape(email),                                                                                                                            
+	      address: escape(address),                                                                                                                        
+	     },                                                                                                                                                
+	     success:  ResultCustomer,
+	     error:errormsg                                                                                                                          
+	    });                                                                                                                                                
+	   } 
+
+	   function ResultCustomer(returnedData)                                                                                                               
+	   {                                                                                                                                                   
+	    // Iterate over all nodes in root node (i.e. the 'created' element in root which has an attribute called status)                                   
+	    for (i = 0; i < returnedData.childNodes.length; i++) {                                                                                             
+	      if(returnedData.childNodes.item(i).nodeName=="created"){                                                                                         
+	       alert(returnedData.childNodes.item(i).attributes['status'].nodeValue);                                                                          
+	      }                                                                                                                                                
+	    }                                                                                                                                                  
+	   }
+
+		function errormsg(jqXHR,textStatus,errorThrown)
+			{
+				console.log(jqXHR);
+				alert("AJAX Error:\n"+errorThrown);
+			}
+	
+	
+	
+
+	 $(document).ready(function() {
+
+		
+			$("#buttonLogin").click(function(){
+				/*alert($("#login").css("marginTop"));*/
+				if($("#login").css("marginTop")=="-200px"){	
+					$("#login").animate({marginTop: "50px"},1000);
+				}else {
+					$("#login").animate({marginTop:"-200px"},1000);
+				}
+			});
+		
+	
+	 });
+	$(document).ready(function(){  
+		$(".menuitem").click(function(e){  
+			alert(e.target.id);
+			$("#resc1").hide();
+			$("#resc2").hide();
+			$("#resc3").hide();
+			
+			$( "#search" ).append( "<div id="container"><div id="cal1"></div></div>" );
+			
+			return false;  
+		});
+	});
+	
+	function dropdownreverse(divname){
+		ddr=document.getElementById(divname);
+		
+		if(ddr.style.display=="none"){
+			ddr.style.display="block";
+			newCust.style.display="none";
+		}else{
+			ddr.style.display="none";
+		}
+		
+	}
+	
+	
+	function expandHide(content){
+		
+		// alert(content);
+		
+		destinationelement=document.getElementById(content);
+		
+		destinationelement.style.display="block";
+		
+		if(destinationelement.id=="booking"){
+			start.style.display="none";
+			
+			search.style.display="none";
+			
+			custBookings.style.display="none";
+			
+		}else if(destinationelement.id=="start"){
+			booking.style.display="none";
+			
+			search.style.display="none";
+			
+			custBookings.style.display="none";
+			
+		}else if(destinationelement.id=="custBookings"){
+			booking.style.display="none";
+			
+			search.style.display="none";
+			
+			start.style.display="none";
+			
+		}else if(destinationelement.id=="search"){
+			booking.style.display="none";
+			start.style.display="none";
+			
+			custBookings.style.display="none";
+			
+		}else if(destinationelement.id=="newCust"){
+			login.style.display="none";
+		}
+		return false;
+	}
+
+	function nameCheck(inputname){
+		nc=document.getElementById(inputname);
+		var letter=/^[a-zA-Z- ]+$/;
+		
+		if(nc.value.match(letter)){
+			nc.style.background="green";
+			nc.className="isValid";
+		}else{
+			nc.style.background="red";
+			nc.className="noValid";
+		}
+	}
+	
+	function UserCheck(inputname){
+		nc=document.getElementById(inputname);
+		var letter=/^[0-9a-zA-Z- ]+$/;
+		
+		if(nc.value.match(letter)){
+			nc.style.background="green";
+			nc.className="isValid";
+		}else{
+			nc.style.background="red";
+			nc.className="noValid";
+		}
+	}
+	
+	function emailCheck(){
+		ec=document.getElementById("email");
+		
+		var mail= /^[^@]+@[^@]+\.[^@]+$/;
+		
+		if(ec.value.match(mail)){
+			ec.style.background="lightgreen";
+			ec.className="isValid";
+		}else{
+			ec.style.background="red";
+			ec.className="noValid";
+		}
+	}
+	
+	function GetValidated(inputButton){
+		var ln=document.getElementById("loginusername");
+
+		
+		if(ln.className=="isValid"){
+			document.getElementById(inputButton).disabled="";
+		}else{
+			document.getElementById(inputButton).disabled="disabled";
+		}
+		
+	}
+	
+	function GetValidetedx2(inputButton){
+			/*var id=document.getElementById("customerID");
+			var adress=document.getElementById("address");*/
+			var mail=document.getElementById("email");
+			
+			var ln=document.getElementById("lastname2");
+			var fn=document.getElementById("firstname2");
+			
+			
+		if(ln.className=="isValid" && fn.className=="isValid" && mail.className=="isValid"){
+			document.getElementById(inputButton).disabled="";
+		}else{
+			document.getElementById(inputButton).disabled="disabled";
+		}
+	}
+
+	
+
+</script>
+
+</html>

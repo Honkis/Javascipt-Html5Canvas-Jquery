@@ -1,0 +1,99 @@
+#topmeny {
+	width:100%; height: 40px ;
+	border-bottom: thick dotted #ff0000;
+}
+#buttonLogin {
+	float:right;
+	width:70px; height:30px;
+	cursor:pointer;
+}
+
+#loggout {
+	float:right;
+	width:70px; height:30px;
+	cursor:pointer;
+}
+#meny {
+	float:left;
+	margin-left:45%;
+}
+#buttonSearch {
+	float:left;
+	width:100px; height:30px;
+	background-color:yellow;
+	padding:3px;
+	cursor:pointer;
+}
+#buttonmCustBookings {
+	display: none;
+	float:left;
+	width:100px; height:30px;
+	background-color:green;
+	padding:3px;
+	cursor:pointer;
+	
+}
+#buttonmbooking {
+	float:left;
+	width:70px; height:30px;
+	background-color:green;
+	padding:3px;
+	cursor:pointer;
+}
+#newCust{
+	height:100px;width:80px;float:right;padding:10px;cursor:pointer;
+}
+#login{
+	height:100px;width:80px;float:right;padding:10px;margin:-200px 20px 0px 0px;cursor:pointer;
+}
+
+#search{
+	width:1000px; /*margin-left:auto;margin-right:auto;*/ 
+}
+#buttonbook{
+	width:800px;height:100px;text-align:center;
+	margin:30px 0px 0px 30px;
+	background-color:lightgreen;border:1px solid red;
+	cursor:pointer;
+}
+.menuitem{
+	width:250px;height:200px;float:left;margin:20px 0px 20px 50px;cursor:pointer;
+}
+#booking{
+	width:600px; margin-left:auto;margin-right:auto;
+}
+#start{
+	float:left;
+	margin:25px 0px 0px 25px;
+}
+#calendar2{
+	height:416px;width:292px;
+	float:left;
+	display:none;
+	margin: 0px 0px 0px 20px;
+}
+table.calendar-table{
+	height:416px;width:292px;
+	margin:20px 0px 0px 0px;
+	background-color:lightgreen;
+	border: thick dotted black;
+}
+td.calendar-day{
+	background-color: yellow;
+	padding:4px;
+	text-align:left;font-size:20px;
+	width:30px;height:50px;
+	cursor: pointer;
+}
+
+#text1 {
+	float:left;
+	
+}
+#buttonbook p {
+	width:150px;
+	float:left;
+	margin:-15px 0px 0px 0px;
+}#acceptBooking {
+	
+}
